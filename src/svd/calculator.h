@@ -32,7 +32,8 @@ Matrix reduce_matrix(Matrix input, std::size_t new_size)
 	Matrix r_matrix(new_size);
 
 	std::size_t index_d = input.size() - new_size;
-	std::uint32_t row = index_d, row_n = 0;
+	std::uint32_t row = index_d;
+	std::uint32_t row_n = 0;
 
 	while (row < input.size())
 	{
@@ -191,6 +192,24 @@ Eigen_t<Vector, Matrix> compute_evd(
 	std::uint32_t index = 0;
 	bool is_eval = false;
 
+	Vector curr(size_t);
+
+	for (std::uint32_t row = 0; row < m_size; row++)
+	{
+		m[row][index] = 0;
+		for (std::uint32_t col = 0; col < m_size; col++)
+		{
+			m[row][index] += input[row][col] * vec[col];
+		}
+	}
+
+	for (std::uint32_t col = 0; col < m_size; col++)
+	{
+		vec[col] = m[col][index];
+	}
+
+	index++;
+
 	while (is_eval == false)
 	{
 		for (std::uint32_t row = 0; row < m_size && (index % 100) == 0; row++)
@@ -212,22 +231,21 @@ Eigen_t<Vector, Matrix> compute_evd(
 			vec[col] = m[col][index];
 		}
 
-		if (index > 0)
-		{
-			Arg lambda =
-				(m[0][index - 1] != 0)
-				? (m[0][index] / m[0][index - 1])
-				: m[0][index];
+		Arg lambda =
+			(m[0][index - 1] != 0)
+			? (m[0][index] / m[0][index - 1])
+			: m[0][index];
 
-			is_eval = (std::fabs(lambda - lambda_old) < 0.0000000001) ? true : false;
+		is_eval = (std::fabs(lambda - lambda_old) < 0.0000000001) ? true : false;
 
-			lambda = (std::fabs(lambda) >= 10e-6) ? lambda : 0;
-			eigen.values[eig_count] = lambda; lambda_old = lambda;
-		}
+		lambda = (std::fabs(lambda) >= 10e-6) ? lambda : 0;
+		eigen.values[eig_count] = lambda;
+		lambda_old = lambda;
 
 		index++;
 	}
 
+	printf("index: %d\n", index);
 	Matrix matrix_new;
 
 	if (m_size > 1)
